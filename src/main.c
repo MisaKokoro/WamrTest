@@ -3,10 +3,10 @@
  * Copyright (C) 2019 Intel Corporation.  All rights reserved.
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
-
 #include "wasm_export.h"
 #include "bh_read_file.h"
 #include "bh_getopt.h"
+#include "person.pb-c.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -28,6 +28,7 @@ char *pHead = NULL;			//环形缓冲区首地址
 char *pValidRead = NULL;	//已使用环形缓冲区首地址
 char *pValidWrite = NULL;	//已使用环形缓冲区尾地址
 char *pTail = NULL;			//环形缓冲区尾地址
+void *pResult = NULL;       //存放结果的首指针
 // uint32_t wasm_buffer_base = 0;
 //环形缓冲区初始化
 uint32_t InitRingBuff(wasm_module_inst_t module_inst)
@@ -35,7 +36,9 @@ uint32_t InitRingBuff(wasm_module_inst_t module_inst)
     uint32_t wasm_buffer_base = 0;
 	if(NULL == pHead)
 	{
-		wasm_buffer_base = wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pHead);
+		wasm_buffer_base =  wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pHead);
+        wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pResult);
+        
 	}
 	
 	memset(pHead, 0 , sizeof(BUFF_MAX_LEN));
@@ -132,7 +135,7 @@ main(int argc, char *argv_main[])
     }
     static char global_heap_buf[4096 * 1024];
     char *buffer, error_buf[128];
-    char *wasm_path = "/home/yanxiang/Desktop/WamrTest/build/wasm-app/testapp.aot";
+    char *wasm_path = "/home/yanxiang/Desktop/WamrTest-probuf/build/wasm-app/testapp.aot";
 
     wasm_module_t module = NULL;
     wasm_module_inst_t module_inst = NULL;
@@ -204,24 +207,39 @@ main(int argc, char *argv_main[])
 
     struct timespec beginTime;
     struct timespec endTime;
-    char my_buffer[] = "osmgoqmclgtjkakv";
+    char my_str[] = "osmgoqmclgtjkakv";
     int cnt = atoi(argv_main[1]);
-    int bytes = sizeof(my_buffer);
+    int bytes = sizeof(my_str);
+    char my_buffer[4096] = {0};
+    char t_buff[4096] = {0};
     InitRingBuff(module_inst);
     uint32_t ring_head = wasm_runtime_addr_native_to_app(module_inst,pHead);
     uint32_t ring_tail = wasm_runtime_addr_native_to_app(module_inst,pTail);
-    uint32_t tmp[2] = {ring_head,ring_tail};
-    wasm_runtime_call_wasm(exec_env,init_ringbuffer_func,2,tmp);
+    uint32_t out_ptr   = wasm_runtime_addr_native_to_app(module_inst,pResult);
+    uint32_t tmp[3] = {ring_head,ring_tail,out_ptr};
+    wasm_runtime_call_wasm(exec_env,init_ringbuffer_func,3,tmp);
+
+
+
+  
+    
     clock_gettime(CLOCK_REALTIME, &beginTime);
     for (int i = 0; i < cnt; i++) {
-        WriteRingBuff(my_buffer,sizeof(my_buffer));
+        //创建test，并将其序列化
+        Person test;
+        person__init(&test);
+        test.name = my_str;
+        int size = person__pack(&test,my_buffer);
+        //将buf拷贝到缓冲区准备发送给wasm
+        WriteRingBuff(my_buffer,size);
         wasm_buffer = wasm_runtime_addr_native_to_app(module_inst,pValidRead);
         if (wasm_buffer == 0) {
             printf("unkonwn error \n");
             return 0;
         }
-        uint32 argv2[2] = {wasm_buffer,sizeof(my_buffer) - 1};
+        uint32 argv2[2] = {wasm_buffer,size};
         if (wasm_runtime_call_wasm(exec_env, str_reverse_func, 2, argv2)) {
+            // printf("run str_reverse ok \n");
             // printf("Native finished calling wasm function: str_reverse, "
             //     "returned a reversed string: %s\n",
             //         native_buffer);
@@ -231,9 +249,10 @@ main(int argc, char *argv_main[])
                 wasm_runtime_get_exception(module_inst));
             goto fail;
         }
-        ReadRingBuff(my_buffer,sizeof(my_buffer));
-        printf("mybuffer = %s\n",my_buffer);
-        // wasm_runtime_module_free(module_inst,wasm_buffer);
+        ReadRingBuff(t_buff,size);
+        Person *p = person__unpack(NULL,size,pResult);
+        // printf("p->name = %s\n",p->name);
+
     }
     clock_gettime(CLOCK_REALTIME,&endTime);
 

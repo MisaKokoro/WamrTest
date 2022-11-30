@@ -5,6 +5,7 @@
 /.idea
 **/cmake-build-*/
 **/*build/
+**/*protobuf-wasm/
 *.obj
 *.a
 *.so
@@ -14,7 +15,6 @@
 core/deps/**
 core/shared/mem-alloc/tlsf
 core/app-framework/wgl
-tests/benchmarks/
 
 wamr-sdk/out/
 wamr-sdk/runtime/build_runtime_sdk/

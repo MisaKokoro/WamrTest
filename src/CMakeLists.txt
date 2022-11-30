@@ -1,7 +1,8 @@
 # Copyright (C) 2022 Intel Corporation.  All rights reserved.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required (VERSION 3.14)
+# include(CheckPIESupported)
 
 if (NOT WAMR_BUILD_PLATFORM STREQUAL "windows")
   project (wamrTest)
@@ -61,7 +62,7 @@ if (NOT MSVC)
   if (NOT (CMAKE_C_COMPILER MATCHES ".*clang.*" OR CMAKE_C_COMPILER_ID MATCHES ".*Clang"))
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
   endif ()
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wformat -Wformat-security")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wformat -Wformat-security -I/home/yanxiang/Desktop/WamrTest-probuf/include")
   if (WAMR_BUILD_TARGET MATCHES "X86_.*" OR WAMR_BUILD_TARGET STREQUAL "AMD_64")
     if (NOT (CMAKE_C_COMPILER MATCHES ".*clang.*" OR CMAKE_C_COMPILER_ID MATCHES ".*Clang"))
       set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mindirect-branch-register")
@@ -79,10 +80,13 @@ add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include (${SHARED_DIR}/utils/uncommon/shared_uncommon.cmake)
 
-add_executable (wamrTest main.c ${UNCOMMON_SHARED_SOURCE})
+add_executable (wamrTest main.c person.pb-c.c ${UNCOMMON_SHARED_SOURCE})
+
+# check_pie_supported()
+# set_target_properties (wamrTest PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if (APPLE)
   target_link_libraries (wamrTest vmlib -lm -ldl -lpthread)
 else ()
-  target_link_libraries (wamrTest vmlib -lm -ldl -lpthread -lrt)
+  target_link_libraries (wamrTest vmlib -lm -ldl -lpthread -lrt -lprotobuf-c)
 endif ()
