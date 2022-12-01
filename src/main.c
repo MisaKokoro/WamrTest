@@ -7,6 +7,7 @@
 #include "bh_read_file.h"
 #include "bh_getopt.h"
 #include "person.pb-c.h"
+#include "test.h"
 
 #include <time.h>
 #include <sys/time.h>
@@ -15,20 +16,46 @@
 #define VOS_OK 0
 #define VOS_ERR -1
 
+//测试相关参数
+int cnt = 0;
+void *native_buffer;
+uint32_t wasm_buffer = 0;
+//运行函数相关参数
+wasm_module_t module = NULL;
+wasm_module_inst_t module_inst = NULL;
+wasm_exec_env_t exec_env = NULL;
+uint32 buf_size, stack_size = 8192, heap_size = 8192;
+wasm_function_inst_t str_reverse_func = NULL;
+wasm_function_inst_t _str_reverse_func = NULL;
+wasm_function_inst_t add_func = NULL;
+wasm_function_inst_t init_ringbuffer_func = NULL;
+//环形缓冲区相关参数
+char *pHead = NULL;			//环形缓冲区首地址
+char *pValidRead = NULL;	//已使用环形缓冲区首地址
+char *pValidWrite = NULL;	//已使用环形缓冲区尾地址
+char *pTail = NULL;			//环形缓冲区尾地址
+//wasm函数运行后的序列化数组通过这个指针获取
+void *pResult = NULL;       //存放结果的首指针
+
+enum {
+    STR_REVERSE,
+    STR_REVERSE_EXEC,
+    FIB,
+};
+const char *TestCase[] = {
+    "str_reverse","str_reverse_exec",
+    "fib",
+};
 
 void
 print_usage(void)
 {
     fprintf(stdout, "Options:\r\n");
-    fprintf(stdout, "[cnt of malloc] [bytes of malloc] \n");
+    fprintf(stdout, "[id of test case] [cnt of run times] \n");
 }
 
 
-char *pHead = NULL;			//环形缓冲区首地址
-char *pValidRead = NULL;	//已使用环形缓冲区首地址
-char *pValidWrite = NULL;	//已使用环形缓冲区尾地址
-char *pTail = NULL;			//环形缓冲区尾地址
-void *pResult = NULL;       //存放结果的首指针
+
 // uint32_t wasm_buffer_base = 0;
 //环形缓冲区初始化
 uint32_t InitRingBuff(wasm_module_inst_t module_inst)
@@ -37,8 +64,6 @@ uint32_t InitRingBuff(wasm_module_inst_t module_inst)
 	if(NULL == pHead)
 	{
 		wasm_buffer_base =  wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pHead);
-        wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pResult);
-        
 	}
 	
 	memset(pHead, 0 , sizeof(BUFF_MAX_LEN));
@@ -126,10 +151,10 @@ int ReadRingBuff(char *pBuff, int len)
 	
 	return len;
 }
-int
-main(int argc, char *argv_main[])
+
+int main(int argc, char *argv_main[])
 {
-    if (argc != 2) {
+    if (argc != 3) {
         print_usage();
         return 0;
     }
@@ -137,16 +162,7 @@ main(int argc, char *argv_main[])
     char *buffer, error_buf[128];
     char *wasm_path = "/home/yanxiang/Desktop/WamrTest-probuf/build/wasm-app/testapp.aot";
 
-    wasm_module_t module = NULL;
-    wasm_module_inst_t module_inst = NULL;
-    wasm_exec_env_t exec_env = NULL;
-    uint32 buf_size, stack_size = 8092, heap_size = (uint32)2147483648;
-    wasm_function_inst_t str_reverse_func = NULL;
-    wasm_function_inst_t _str_reverse_func = NULL;
-    wasm_function_inst_t add_func = NULL;
-    wasm_function_inst_t init_ringbuffer_func = NULL;
-    char *native_buffer = NULL;
-    uint32_t wasm_buffer = 0;
+
 
     RuntimeInitArgs init_args;
     memset(&init_args, 0, sizeof(RuntimeInitArgs));
@@ -212,66 +228,26 @@ main(int argc, char *argv_main[])
     }
 
 
-    struct timespec beginTime;
-    struct timespec endTime;
-    char my_str[] = "osmgoqmclgtjkakv";
-    int cnt = atoi(argv_main[1]);
-    int bytes = sizeof(my_str);
-    char my_buffer[4096] = {0};
-    char t_buff[4096] = {0};
+
+
     InitRingBuff(module_inst);
+    wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pResult);
     uint32_t ring_head = wasm_runtime_addr_native_to_app(module_inst,pHead);
     uint32_t ring_tail = wasm_runtime_addr_native_to_app(module_inst,pTail);
     uint32_t out_ptr   = wasm_runtime_addr_native_to_app(module_inst,pResult);
     uint32_t tmp[3] = {ring_head,ring_tail,out_ptr};
     wasm_runtime_call_wasm(exec_env,init_ringbuffer_func,3,tmp);
 
-
-
-
-  
-    // void *native_ptr;
-    // uint32_t wasm_ptr =  wasm_runtime_module_malloc(module_inst,sizeof(my_str),(void**)&native_ptr);
-    // memcpy(native_ptr,my_str,sizeof(my_str));
-
-
-    clock_gettime(CLOCK_REALTIME, &beginTime);
-    for (int i = 0; i < cnt; i++) {
-        // 创建test，并将其序列化
-        Person test;
-        person__init(&test);
-        test.name = my_str;
-        int size = person__pack(&test,my_buffer);
-        // 将buf拷贝到缓冲区准备发送给wasm
-        WriteRingBuff(my_buffer,size);
-        wasm_buffer = wasm_runtime_addr_native_to_app(module_inst,pValidRead);
-        if (wasm_buffer == 0) {
-            printf("unkonwn error \n");
-            return 0;
-        }
-        uint32 argv2[2] = {wasm_buffer,size};
-        if (wasm_runtime_call_wasm(exec_env, str_reverse_func, 2, argv2)) {
-            // printf("run str_reverse ok \n");
-            // printf("Native finished calling wasm function: str_reverse, "
-            //     "returned a reversed string: %s\n",
-            //         native_buffer);
-        }
-        else {
-            printf("call wasm function str_reverse failed. error: %s\n",
-                wasm_runtime_get_exception(module_inst));
-            goto fail;
-        }
-        ReadRingBuff(t_buff,size);
-        Person *p = person__unpack(NULL,size,pResult);
-        printf("p->name = %s\n",p->name);
-
+    wasm_buffer =  wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&native_buffer);
+    if (wasm_buffer == 0) {
+        printf("unkonwn error \n");
+        return 0;
     }
-    clock_gettime(CLOCK_REALTIME,&endTime);
 
-    long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
-    long na = diff % 1000;
-    long micro = diff / 1000;
-    printf("malloc and set and run : size:%dK cnt:%d \t\tcost:%ld.%03ldus\n",bytes,cnt,micro,na);
+    int id = atoi(argv_main[1]);
+    cnt = atoi(argv_main[2]);
+    test_main(id,TestCase[id]);
+
 
 fail:
     if (exec_env)
@@ -287,4 +263,78 @@ fail:
         BH_FREE(buffer);
     wasm_runtime_destroy();
     return 0;
+}
+
+void test_main(int id,const char *test_name) {
+    struct timespec beginTime;
+    struct timespec endTime;
+    clock_gettime(CLOCK_REALTIME, &beginTime);
+
+    switch (id) {
+        case STR_REVERSE:
+            test_str_reverse();
+            break;
+        case STR_REVERSE_EXEC:
+            test_str_reverse_exec();
+        case FIB:
+            test_fib();
+            break;
+        default:
+            printf("no this test!\n");
+            exit(EXIT_FAILURE);
+    }
+    clock_gettime(CLOCK_REALTIME,&endTime);
+
+
+    long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
+    long na = diff % 1000;
+    long micro = diff / 1000;
+    printf("API  test case: %s  cnt:%d \t\tcost:%ld.%03ldus\n",test_name,cnt,micro,na);
+}
+
+void test_str_reverse() {
+    char my_str[] = "osmgoqmclgtjkakv";
+    for (int i = 0; i < cnt; i++) {
+        // 创建test，并将其序列化
+        Person test;
+        person__init(&test);
+        test.name = my_str;
+        int size = person__pack(&test,native_buffer);
+
+        //传递参数，开始执行
+        uint32_t argv[2] = {wasm_buffer,size};
+        if (wasm_runtime_call_wasm(exec_env, str_reverse_func, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function str_reverse failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        //将得到的结果反序列化
+        size = argv[0];
+        Person *p = person__unpack(NULL,size,pResult);
+        // printf("p->name = %s\n",p->name);
+    }
+}
+
+void test_str_reverse_exec() {
+    char my_str[] = "osmgoqmclgtjkakv";
+    for (int i = 0; i < cnt; i++) {
+        uint32_t argv[2] = {wasm_buffer,sizeof(my_str) - 1};
+        memcpy(native_buffer,my_str,sizeof(my_str));
+        if (wasm_runtime_call_wasm(exec_env, _str_reverse_func, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function str_reverse failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        // printf("after: str = %s\n",(char*)native_buffer);
+    }
+}
+
+void test_fib() {
+
 }

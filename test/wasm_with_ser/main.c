@@ -44,7 +44,7 @@ int main(int argc,char *argv[]) {
     int cnt = atoi(argv[1]);
     int size = 0;
 
-        str_reverse(buffer,size);
+
 
     clock_gettime(CLOCK_REALTIME, &beginTime);
     for (int i = 0; i < cnt; i++) {
@@ -53,12 +53,15 @@ int main(int argc,char *argv[]) {
         person__init(&test);
         test.name = str;
         size = person__pack(&test,buffer);
-        // str_reverse(buffer,size);
+
+
+        str_reverse(buffer,size);
+
+        Person *p = person__unpack(NULL,size,out);
 
         // printf("p->name = %s\n",p->name);
     }
     clock_gettime(CLOCK_REALTIME,&endTime);
-        Person *p = person__unpack(NULL,size,out);
 
 
 
@@ -70,3 +73,4 @@ int main(int argc,char *argv[]) {
 
     return 0;
 }
+

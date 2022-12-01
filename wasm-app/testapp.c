@@ -55,20 +55,18 @@ void _str_reverse(char *str,int len) {
     }
 }
 
-void *str_reverse(char *buf,int size) {
+int str_reverse(const uint8_t *buf,int size) {
     
 
-    readBuffer(buf,size);
     //将字节数组反序列化成Person
     struct Person *per;
-    per = person__unpack(NULL,size,tmp);
+    per = person__unpack(NULL,size,buf);
     int len = strlen(per->name);
     //反转字符串
     _str_reverse(per->name,len);
     //将处理好后的person反序列化到out
-    person__pack(per,out);
-
-    writeBuffer(buf,size);
+    int res = person__pack(per,(void*)out);
+    return res;
 }
 
 int add(int a,int b) {
@@ -84,30 +82,30 @@ void init_ringbuffer(void* head,void* tail,void *out_ptr) {
 //不能nostdlib编译，因此加上main函数
 //nostdlib编译会出现一个没有实现的函数__assert_fail,导致程序无法运行
 int main(int argc,char *argv[]) {
-    char *str = "osmgoqmclgtjkakv";
+    // char *str = "osmgoqmclgtjkakv";
 
-    char buffer[2048];
+    // char buffer[2048];
     
-    struct timespec beginTime;
-    struct timespec endTime;
-    int cnt = atoi(argv[1]);
+    // struct timespec beginTime;
+    // struct timespec endTime;
+    // int cnt = atoi(argv[1]);
 
-    Person test;
-    person__init(&test);
-    test.name = str;
-    int size = person__pack(&test,buffer);
+    // Person test;
+    // person__init(&test);
+    // test.name = str;
+    // int size = person__pack(&test,buffer);
 
-    clock_gettime(CLOCK_REALTIME, &beginTime);
-    for (int i = 0; i < cnt; i++) {
-        Person *p = person__unpack(NULL,size,buffer);
-        // printf("p->name = %s\n",p->name);
-    }
-    clock_gettime(CLOCK_REALTIME,&endTime);
+    // clock_gettime(CLOCK_REALTIME, &beginTime);
+    // for (int i = 0; i < cnt; i++) {
+    //     Person *p = person__unpack(NULL,size,buffer);
+    //     // printf("p->name = %s\n",p->name);
+    // }
+    // clock_gettime(CLOCK_REALTIME,&endTime);
 
-    long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
-    long na = diff % 1000;
-    long micro = diff / 1000;
-    printf("person pack cnt:%d \t\tcost:%ld.%03ldus\n",cnt,micro,na);
+    // long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
+    // long na = diff % 1000;
+    // long micro = diff / 1000;
+    // printf("person pack cnt:%d \t\tcost:%ld.%03ldus\n",cnt,micro,na);
 
     return 0;
 }

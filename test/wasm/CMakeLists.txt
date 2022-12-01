@@ -24,4 +24,4 @@ set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -O0 -z stack-size=409600 -
 # set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--strip-all,--no-entry -nostdlib")
 
 
-add_executable(wasm.wasm main.c)
+add_executable(wasm.wasm ../native/main.c)
