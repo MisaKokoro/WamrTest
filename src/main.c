@@ -142,6 +142,7 @@ main(int argc, char *argv_main[])
     wasm_exec_env_t exec_env = NULL;
     uint32 buf_size, stack_size = 8092, heap_size = (uint32)2147483648;
     wasm_function_inst_t str_reverse_func = NULL;
+    wasm_function_inst_t _str_reverse_func = NULL;
     wasm_function_inst_t add_func = NULL;
     wasm_function_inst_t init_ringbuffer_func = NULL;
     char *native_buffer = NULL;
@@ -204,6 +205,12 @@ main(int argc, char *argv_main[])
         goto fail;
     }
 
+    if (!(_str_reverse_func = wasm_runtime_lookup_function(module_inst, "_str_reverse",
+                                              NULL))) {
+        printf("The _str_reverse wasm function is not found.\n");
+        goto fail;
+    }
+
 
     struct timespec beginTime;
     struct timespec endTime;
@@ -221,16 +228,21 @@ main(int argc, char *argv_main[])
 
 
 
+
   
-    
+    // void *native_ptr;
+    // uint32_t wasm_ptr =  wasm_runtime_module_malloc(module_inst,sizeof(my_str),(void**)&native_ptr);
+    // memcpy(native_ptr,my_str,sizeof(my_str));
+
+
     clock_gettime(CLOCK_REALTIME, &beginTime);
     for (int i = 0; i < cnt; i++) {
-        //创建test，并将其序列化
+        // 创建test，并将其序列化
         Person test;
         person__init(&test);
         test.name = my_str;
         int size = person__pack(&test,my_buffer);
-        //将buf拷贝到缓冲区准备发送给wasm
+        // 将buf拷贝到缓冲区准备发送给wasm
         WriteRingBuff(my_buffer,size);
         wasm_buffer = wasm_runtime_addr_native_to_app(module_inst,pValidRead);
         if (wasm_buffer == 0) {
@@ -251,7 +263,7 @@ main(int argc, char *argv_main[])
         }
         ReadRingBuff(t_buff,size);
         Person *p = person__unpack(NULL,size,pResult);
-        // printf("p->name = %s\n",p->name);
+        printf("p->name = %s\n",p->name);
 
     }
     clock_gettime(CLOCK_REALTIME,&endTime);
