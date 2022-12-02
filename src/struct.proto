@@ -3,3 +3,7 @@ syntax = "proto3";
 message Person {
   string name = 1;
 }
+
+message Fib {
+  int32 num = 1;
+}

@@ -6,7 +6,7 @@
 #include "wasm_export.h"
 #include "bh_read_file.h"
 #include "bh_getopt.h"
-#include "person.pb-c.h"
+#include "struct.pb-c.h"
 #include "test.h"
 
 #include <time.h>
@@ -29,6 +29,8 @@ wasm_function_inst_t str_reverse_func = NULL;
 wasm_function_inst_t _str_reverse_func = NULL;
 wasm_function_inst_t add_func = NULL;
 wasm_function_inst_t init_ringbuffer_func = NULL;
+wasm_function_inst_t fib_func = NULL;
+wasm_function_inst_t _fib_func = NULL;
 //环形缓冲区相关参数
 char *pHead = NULL;			//环形缓冲区首地址
 char *pValidRead = NULL;	//已使用环形缓冲区首地址
@@ -38,13 +40,12 @@ char *pTail = NULL;			//环形缓冲区尾地址
 void *pResult = NULL;       //存放结果的首指针
 
 enum {
-    STR_REVERSE,
-    STR_REVERSE_EXEC,
-    FIB,
+    STR_REVERSE,STR_REVERSE_EXEC,
+    FIB,FIB_EXEC,
 };
 const char *TestCase[] = {
     "str_reverse","str_reverse_exec",
-    "fib",
+    "fib","fib_exec",
 };
 
 void
@@ -227,6 +228,17 @@ int main(int argc, char *argv_main[])
         goto fail;
     }
 
+    if (!(fib_func = wasm_runtime_lookup_function(module_inst, "fib",
+                                              NULL))) {
+        printf("The fib wasm function is not found.\n");
+        goto fail;
+    }
+
+    if (!(_fib_func = wasm_runtime_lookup_function(module_inst, "_fib",
+                                              NULL))) {
+        printf("The _fib wasm function is not found.\n");
+        goto fail;
+    }
 
 
 
@@ -276,8 +288,12 @@ void test_main(int id,const char *test_name) {
             break;
         case STR_REVERSE_EXEC:
             test_str_reverse_exec();
+            break;
         case FIB:
             test_fib();
+            break;
+        case FIB_EXEC:
+            test_fib_exec();
             break;
         default:
             printf("no this test!\n");
@@ -336,5 +352,40 @@ void test_str_reverse_exec() {
 }
 
 void test_fib() {
+    for (int i = 0; i < cnt; i++) {
+        // 创建test，并将其序列化
+        Fib test;
+        fib__init(&test);
+        test.num = 42;
+        int size = fib__pack(&test,native_buffer);
+        //传递参数，开始执行
+        uint32_t argv[2] = {wasm_buffer,size};
+        if (wasm_runtime_call_wasm(exec_env, fib_func, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function fib failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        //将得到的结果反序列化
+        size = argv[0];
+        Fib *p = fib__unpack(NULL,size,pResult);
+        printf("p->num = %d\n",p->num);
+    }
+}
 
+void test_fib_exec() {
+    for (int i = 0; i < cnt; i++) {
+        uint32_t argv[2] = {42};
+        if (wasm_runtime_call_wasm(exec_env, _fib_func, 1, argv)) {
+            // printf("run str_reverse ok \n");
+        } else {
+            printf("call wasm function fib failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        int res = argv[0];
+        printf("res = %d\n",res);
+    }
 }

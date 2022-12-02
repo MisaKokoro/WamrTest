@@ -28,7 +28,10 @@ set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--export=str_reverse")
 set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--export=init_ringbuffer")
 set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--export=add")
 set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--export=_str_reverse")
+set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--export=fib")
+set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--export=_fib")
+
 set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--allow-undefined")
 
-add_executable(testapp.wasm testapp.c ../src/person.pb-c.c)
+add_executable(testapp.wasm testapp.c ../src/struct.pb-c.c)
 target_link_libraries(testapp.wasm)

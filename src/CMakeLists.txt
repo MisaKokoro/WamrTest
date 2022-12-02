@@ -80,7 +80,7 @@ add_library(vmlib ${WAMR_RUNTIME_LIB_SOURCE})
 include_directories(${CMAKE_CURRENT_LIST_DIR})
 include (${SHARED_DIR}/utils/uncommon/shared_uncommon.cmake)
 
-add_executable (wamrTest main.c person.pb-c.c ${UNCOMMON_SHARED_SOURCE})
+add_executable (wamrTest main.c struct.pb-c.c ${UNCOMMON_SHARED_SOURCE})
 
 # check_pie_supported()
 # set_target_properties (wamrTest PROPERTIES POSITION_INDEPENDENT_CODE ON)

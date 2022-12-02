@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include "person.pb-c.h"
+#include "struct.pb-c.h"
 
 char tmp[4096] = {0};
 void* ringBufferHead;
@@ -79,6 +79,19 @@ void init_ringbuffer(void* head,void* tail,void *out_ptr) {
     out            = out_ptr;
 }
 
+int _fib(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return _fib(n - 1) + _fib(n - 2);
+}
+
+int fib(const uint8_t *buf,int size) {
+    Fib *p = fib__unpack(NULL,size,buf);
+    p->num = _fib(p->num);
+    int res = fib__pack(p,out);
+    return res;
+}
 //不能nostdlib编译，因此加上main函数
 //nostdlib编译会出现一个没有实现的函数__assert_fail,导致程序无法运行
 int main(int argc,char *argv[]) {

@@ -8,22 +8,24 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include "person.pb-c.h"
+#include "struct.pb-c.h"
 #include "test.h"
 
-char tmp[4096] = {0};
-char out[4096] = {0};
+uint8_t tmp[4096] = {0};
+uint8_t out[4096] = {0};
 
 enum {
     STR_REVERSE,
     STR_REVERSE_SER,
     STR_REVERSE_UNSER,
-
-
+    FIB,
+    FIB_SER,
+    FIB_UNSER,
 };
 int cnt = 0;
 const char *TestCase[] = {
     "str_reverse","str_reverse_ser","str_reverse_unser",
+    "fib","fib_ser","fib_unser",
 
 };
 int main(int argc,char *argv[]) {
@@ -50,6 +52,15 @@ void test_main(int id,const char *test_name) {
         case STR_REVERSE_UNSER:
             test_str_reverse_unser();
             break;
+        case FIB:
+            test_fib();
+            break;
+        case FIB_SER:
+            test_fib_ser();
+            break;
+        case FIB_UNSER:
+            test_fib_unser();
+            break;
         default:
             printf("no this test!\n");
             exit(EXIT_FAILURE);
@@ -71,7 +82,7 @@ void _str_reverse(char *str,int len) {
     }
 }
 
-int str_reverse(char *buf,int size) {
+int str_reverse(uint8_t *buf,int size) {
     struct Person *per;
     per = person__unpack(NULL,size,buf);
     int len = strlen(per->name);
@@ -84,7 +95,7 @@ int str_reverse(char *buf,int size) {
 
 void test_str_reverse() {
     char str[] = "osmgoqmclgtjkakv";
-    char buffer[2048];
+    uint8_t buffer[2048];
 
     for (int i = 0; i < cnt; i++) {
         Person test;
@@ -100,7 +111,7 @@ void test_str_reverse() {
 
 void test_str_reverse_ser() {
     char str[] = "osmgoqmclgtjkakv";
-    char buffer[2048];
+    uint8_t buffer[2048];
     struct timespec beginTime;
     struct timespec endTime;
 
@@ -114,7 +125,7 @@ void test_str_reverse_ser() {
 
 void test_str_reverse_unser() {
     char str[] = "osmgoqmclgtjkakv";
-    char buffer[2048];
+    uint8_t buffer[2048];
     Person test;
     person__init(&test);
     test.name = str;
@@ -122,6 +133,56 @@ void test_str_reverse_unser() {
 
     for (int i = 0; i < cnt; i++) {
         Person *p = person__unpack(NULL,size,buffer);
+    }
+}
+
+int _fib(int n) {
+    if (n <= 1) {
+        return n;
+    }
+    return _fib(n - 1) + _fib(n - 2);
+}
+
+int fib(uint8_t *buf,int size) {
+    Fib *p = fib__unpack(NULL,size,buf);
+    p->num = _fib(p->num);
+    int res = fib__pack(p,out);
+    return res;
+}
+
+void test_fib() {
+    uint8_t buffer[2048];
+    for (int i = 0; i < cnt; i++) {
+        Fib test;
+        fib__init(&test);
+        test.num = 42;
+        int size = fib__pack(&test,buffer);
+        size = fib(buffer,size);
+        Fib *p = fib__unpack(NULL,size,out);
+        printf("p->num = %d\n",p->num);
+    }
+}
+
+void test_fib_ser() {
+    uint8_t buffer[2048];
+    for (int i = 0; i < cnt; i++) {
+        Fib test;
+        fib__init(&test);
+        test.num = 42;
+        int size = fib__pack(&test,buffer);
+    }
+}
+
+void test_fib_unser() {
+    uint8_t buffer[2048];
+    Fib test;
+    fib__init(&test);
+    test.num = 42;
+    int size = fib__pack(&test,buffer);
+
+    for (int i = 0; i < cnt; i++) {
+        Fib *p = fib__unpack(NULL,size,buffer);
+        printf("p->num = %d\n",p->num);
     }
 }
 

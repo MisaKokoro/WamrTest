@@ -24,5 +24,5 @@ set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS}  -I/home/yanxiang/Desktop/
 # set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -Wl,--strip-all,--no-entry -nostdlib")
 
 
-add_executable(wasm_with_ser.wasm main.c ../../src/person.pb-c.c)
+add_executable(wasm_with_ser.wasm ../native_with_ser/main.c ../../src/struct.pb-c.c)
 target_link_libraries(wasm_with_ser.wasm)

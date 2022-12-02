@@ -8,7 +8,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include "person.pb-c.h"
+#include "struct.pb-c.h"
 
 char tmp[4096] = {0};
 char out[4096] = {0};
