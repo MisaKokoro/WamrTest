@@ -25,12 +25,9 @@ wasm_module_t module = NULL;
 wasm_module_inst_t module_inst = NULL;
 wasm_exec_env_t exec_env = NULL;
 uint32 buf_size, stack_size = 8192, heap_size = 8192;
-wasm_function_inst_t str_reverse_func = NULL;
-wasm_function_inst_t _str_reverse_func = NULL;
-wasm_function_inst_t add_func = NULL;
+wasm_function_inst_t benchMarkFunc = NULL;
 wasm_function_inst_t init_ringbuffer_func = NULL;
-wasm_function_inst_t fib_func = NULL;
-wasm_function_inst_t _fib_func = NULL;
+
 //环形缓冲区相关参数
 char *pHead = NULL;			//环形缓冲区首地址
 char *pValidRead = NULL;	//已使用环形缓冲区首地址
@@ -48,6 +45,10 @@ const char *TestCase[] = {
     "fib","fib_exec",
 };
 
+const char *FuncName[] = {
+    "str_reverse","_str_reverse",
+    "fib","_fib",
+};
 void
 print_usage(void)
 {
@@ -204,43 +205,20 @@ int main(int argc, char *argv_main[])
         goto fail;
     }
 
-    if (!(str_reverse_func = wasm_runtime_lookup_function(module_inst, "str_reverse",
-                                              NULL))) {
-        printf("The str_reverse wasm function is not found.\n");
-        goto fail;
-    }
-
-    if (!(add_func = wasm_runtime_lookup_function(module_inst, "add",
-                                              NULL))) {
-        printf("The add wasm function is not found.\n");
-        goto fail;
-    }
-
     if (!(init_ringbuffer_func = wasm_runtime_lookup_function(module_inst, "init_ringbuffer",
                                               NULL))) {
         printf("The init_ringbuffer wasm function is not found.\n");
         goto fail;
     }
 
-    if (!(_str_reverse_func = wasm_runtime_lookup_function(module_inst, "_str_reverse",
+    //查找导出的函数
+    int id = atoi(argv_main[1]);
+    cnt = atoi(argv_main[2]);
+    if (!(benchMarkFunc = wasm_runtime_lookup_function(module_inst, FuncName[id],
                                               NULL))) {
-        printf("The _str_reverse wasm function is not found.\n");
+        printf("The %s wasm function is not found.\n",FuncName[id]);
         goto fail;
     }
-
-    if (!(fib_func = wasm_runtime_lookup_function(module_inst, "fib",
-                                              NULL))) {
-        printf("The fib wasm function is not found.\n");
-        goto fail;
-    }
-
-    if (!(_fib_func = wasm_runtime_lookup_function(module_inst, "_fib",
-                                              NULL))) {
-        printf("The _fib wasm function is not found.\n");
-        goto fail;
-    }
-
-
 
     InitRingBuff(module_inst);
     wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&pResult);
@@ -256,8 +234,7 @@ int main(int argc, char *argv_main[])
         return 0;
     }
 
-    int id = atoi(argv_main[1]);
-    cnt = atoi(argv_main[2]);
+
     test_main(id,TestCase[id]);
 
 
@@ -302,10 +279,10 @@ void test_main(int id,const char *test_name) {
     clock_gettime(CLOCK_REALTIME,&endTime);
 
 
-    long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
-    long na = diff % 1000;
-    long micro = diff / 1000;
-    printf("API  test case: %s  cnt:%d \t\tcost:%ld.%03ldus\n",test_name,cnt,micro,na);
+    long long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
+    long long na = diff % 1000;
+    long long micro = diff / 1000;
+    printf("API  test case: %s  cnt:%d \t\tcost:%lld.%03lldus\n",test_name,cnt,micro,na);
 }
 
 void test_str_reverse() {
@@ -319,7 +296,7 @@ void test_str_reverse() {
 
         //传递参数，开始执行
         uint32_t argv[2] = {wasm_buffer,size};
-        if (wasm_runtime_call_wasm(exec_env, str_reverse_func, 2, argv)) {
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
             // printf("run str_reverse ok \n");
         }
         else {
@@ -339,7 +316,7 @@ void test_str_reverse_exec() {
     for (int i = 0; i < cnt; i++) {
         uint32_t argv[2] = {wasm_buffer,sizeof(my_str) - 1};
         memcpy(native_buffer,my_str,sizeof(my_str));
-        if (wasm_runtime_call_wasm(exec_env, _str_reverse_func, 2, argv)) {
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
             // printf("run str_reverse ok \n");
         }
         else {
@@ -360,7 +337,7 @@ void test_fib() {
         int size = fib__pack(&test,native_buffer);
         //传递参数，开始执行
         uint32_t argv[2] = {wasm_buffer,size};
-        if (wasm_runtime_call_wasm(exec_env, fib_func, 2, argv)) {
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
             // printf("run str_reverse ok \n");
         }
         else {
@@ -378,7 +355,7 @@ void test_fib() {
 void test_fib_exec() {
     for (int i = 0; i < cnt; i++) {
         uint32_t argv[2] = {42};
-        if (wasm_runtime_call_wasm(exec_env, _fib_func, 1, argv)) {
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 1, argv)) {
             // printf("run str_reverse ok \n");
         } else {
             printf("call wasm function fib failed. error: %s\n",
@@ -389,3 +366,4 @@ void test_fib_exec() {
         printf("res = %d\n",res);
     }
 }
+

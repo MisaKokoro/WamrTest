@@ -68,10 +68,10 @@ void test_main(int id,const char *test_name) {
     clock_gettime(CLOCK_REALTIME,&endTime);
 
 
-    long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
-    long na = diff % 1000;
-    long micro = diff / 1000;
-    printf("native + serialization: test case: %s  cnt:%d \t\tcost:%ld.%03ldus\n",test_name,cnt,micro,na);
+    long long diff = (endTime.tv_sec-beginTime.tv_sec)*1000000000 + (endTime.tv_nsec - beginTime.tv_nsec);
+    long long na = diff % 1000;
+    long long micro = diff / 1000;
+    printf("native + serialization: test case: %s  cnt:%d \t\tcost:%lld.%03lldus\n",test_name,cnt,micro,na);
 }
 
 void _str_reverse(char *str,int len) {
@@ -112,8 +112,6 @@ void test_str_reverse() {
 void test_str_reverse_ser() {
     char str[] = "osmgoqmclgtjkakv";
     uint8_t buffer[2048];
-    struct timespec beginTime;
-    struct timespec endTime;
 
     for (int i = 0; i < cnt; i++) {
         Person test;
