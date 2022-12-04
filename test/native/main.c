@@ -7,11 +7,12 @@ int cnt = 0;
 enum {
     STR_REVERSE,
     FIB,
-
+    BUILD_USER_ID,
 };
 
 const char *TestCase[] = {
     "str_reverse","fib",
+    "build_user_id",
 };
 
 int main(int argc,char *argv[]) {
@@ -63,6 +64,50 @@ int fib(int n) {
     return fib(n - 2) + fib(n - 1);
 }
 
+unsigned int hash(char *str){
+    register unsigned int h;
+    register unsigned char *p; 
+    for(h=0, p = (unsigned char *)str; *p ; p++)
+    h = 31 * h + *p; 
+    return h;
+}
+
+char * build_user_id(char *user_id, char *imei_id){
+    if(user_id != NULL && user_id != 0)
+        return user_id;
+    else if(imei_id != NULL && imei_id != ""){
+        sprintf(user_id, "%u", hash(imei_id));
+        return user_id;
+    }else
+        return "0";
+}
+
+char **spliter(char data[], size_t length){
+    // char *sep = "\x01";
+    char *sep = " ";
+    char *res[length];
+    char *exclude = "am";
+    res[0] = strtok(data, sep);
+    for(int i=0; res[i] != NULL; i++){
+        res[i+1] = strtok(NULL, sep);
+    }
+    for(int i=0; i<length; i++){
+        if(strcmp(res[i], exclude) == 0)
+            res[i] = NULL;
+    }
+    return res;
+}   
+
+double point_polygen_distance(double point1[], double point2[], size_t size1, size_t size2){
+    double distance = 0;
+    if(size1 == 0 || size2 == 0 || size1 != size2)
+        return distance;
+    for(int i=0; i < size1; i++){
+        distance = distance + (point1[i] - point2[i]) * (point1[i] - point2[i]);
+    }
+    return distance;
+}
+
 void test_str_reverse() {
     char str[] = "osmgoqmclgtjkakv";
     for (int i = 0; i < cnt; i++) {
@@ -76,4 +121,28 @@ void test_fib() {
         res = fib(42);
     }
     printf("res = %d\n",res);
+}
+
+void test_build_user_id(){
+    char *user_id = "23172736737";
+    char *imei_id = "94390520635091";
+    for (int i = 0; i < cnt; i++) {
+        build_user_id(user_id, imei_id);
+    }
+}
+
+void test_split(){
+    char *data = "I am a test";
+    size_t length = 3;
+    for (int i = 0; i < cnt; i++) {
+        char **res = spliter(data, length);
+    }
+}
+
+void test_point_polygen_distance(){
+    double point1[3] = {55.019369276597246,56.04653136999801,61.32173119067093};
+    double point2[3] = {2.5611362913548987,36.674703766827236,-18.76548358360523};
+    for (int i = 0; i < cnt; i++) {
+        point_polygen_distance(point1, point2, 3, 3);
+    }
 }

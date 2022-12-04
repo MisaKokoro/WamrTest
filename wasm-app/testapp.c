@@ -16,8 +16,6 @@ void* ringBufferTail;
 //所有要发送出去的数据都放在out里
 uint8_t *out;
 
-
-
 //将长为len的buffer写入缓冲区
 void writeBuffer(void* wasmPtr,uint32_t len) {
     if (len == 0) {
@@ -92,6 +90,70 @@ int fib(const uint8_t *buf,int size) {
     int res = fib__pack(p,out);
     return res;
 }
+
+unsigned int hash(char *str){
+    register unsigned int h;
+    register unsigned char *p; 
+    for(h=0, p = (unsigned char *)str; *p ; p++)
+    h = 31 * h + *p; 
+    return h;
+}
+
+char* _build_user_id(char *user_id, char *imei_id){
+    if(user_id != NULL && user_id != 0)
+        return user_id;
+    else if(imei_id != NULL && imei_id != ""){
+        sprintf(user_id, "%u", hash(imei_id));
+        return user_id;
+    }else
+        return "0";
+}
+
+int build_user_id(const uint8_t *buf, int size){
+    UserId *user_id = user_id__unpack(NULL, size, buf);
+    user_id->user_id = _build_user_id(user_id->user_id, user_id->imei_id);
+    return fib__pack(user_id, out);
+}
+
+char **_spliter(char data[], size_t length){
+    // char *sep = "\x01";
+    char *sep = " ";
+    char *res[length];
+    char *exclude = "am";
+    res[0] = strtok(data, sep);
+    for(int i=0; res[i] != NULL; i++){
+        res[i+1] = strtok(NULL, sep);
+    }
+    for(int i=0; i<length; i++){
+        if(strcmp(res[i], exclude) == 0)
+            res[i] = NULL;
+        printf("res %d: %s\n", i, res[i]);
+    }
+    return res;
+}   
+
+int spliter(const uint8_t *buf, size_t size, size_t array_len){
+    Spliter *spliter = spliter__unpack(NULL, size, buf);
+    spliter->data =  _spliter(spliter->data[0], array_len);
+    spliter->n_data = array_len;
+    return spliter__pack(spliter, out);
+}
+
+double _point_polygen_distance(double point1[], double point2[], size_t size1, size_t size2){
+    double distance = 0;
+    if(size1 == 0 || size2 == 0 || size1 != size2)
+        return distance;
+    for(int i=0; i < size1; i++){
+        distance = distance + (point1[i] - point2[i]) * (point1[i] - point2[i]);
+    }
+    return distance;
+}
+int point_polygen_distance(const uint8_t *buf, size_t size){
+    PointPolygenDistance *point = point_polygen_distance__unpack(NULL, size, buf);
+    point->distance = _point_polygen_distance(point->point1, point->point2, point->n_point1, point->n_point2);
+    return point_polygen_distance__pack(point, out);
+}
+
 //不能nostdlib编译，因此加上main函数
 //nostdlib编译会出现一个没有实现的函数__assert_fail,导致程序无法运行
 int main(int argc,char *argv[]) {

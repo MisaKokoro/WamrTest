@@ -19,3 +19,22 @@ void test_fib();
 void test_fib_ser();
 
 void test_fib_unser();
+
+int build_user_id();
+
+char *_build_user_id();
+
+void test_build_user_id();
+
+void test_build_user_id_ser();
+
+void test_build_user_id_unser();
+
+double _point_polygen_distance();
+
+int point_polygen_distance();
+
+void test_point_polygen_distance_ser();
+
+void test_point_polygen_distance_unser();
+

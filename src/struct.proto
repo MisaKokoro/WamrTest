@@ -7,3 +7,18 @@ message Person {
 message Fib {
   int32 num = 1;
 }
+
+message UserId {
+  string user_id = 1;
+  string imei_id = 2;
+}
+
+message Spliter {
+  repeated string data = 1;
+}
+
+message PointPolygenDistance{
+  repeated double point1 = 1;
+  repeated double point2 = 2;
+  double distance = 3;
+}

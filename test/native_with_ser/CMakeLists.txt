@@ -7,7 +7,7 @@ project(native_with_ser)
 set (CMAKE_C_COMPILER_TARGET        "x86_64")
 set (CMAKE_C_COMPILER               "gcc")
 set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS} -O0")
-set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS}  -I/home/yanxiang/Desktop/WamrTest-probuf/include")
+set (CMAKE_C_FLAGS                  "${CMAKE_C_FLAGS}  -I/home/xq/Desktop/work/WamrTest/include -I/usr/local/include")
 
 
 add_executable(native_with_ser main.c ../../src/struct.pb-c.c)

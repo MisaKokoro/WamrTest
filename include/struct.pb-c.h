@@ -17,6 +17,9 @@ PROTOBUF_C__BEGIN_DECLS
 
 typedef struct Person Person;
 typedef struct Fib Fib;
+typedef struct UserId UserId;
+typedef struct Spliter Spliter;
+typedef struct PointPolygenDistance PointPolygenDistance;
 
 
 /* --- enums --- */
@@ -42,6 +45,42 @@ struct  Fib
 #define FIB__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&fib__descriptor) \
     , 0 }
+
+
+struct  UserId
+{
+  ProtobufCMessage base;
+  char *user_id;
+  char *imei_id;
+};
+#define USER_ID__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&user_id__descriptor) \
+    , (char *)protobuf_c_empty_string, (char *)protobuf_c_empty_string }
+
+
+struct  Spliter
+{
+  ProtobufCMessage base;
+  size_t n_data;
+  char **data;
+};
+#define SPLITER__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&spliter__descriptor) \
+    , 0,NULL }
+
+
+struct  PointPolygenDistance
+{
+  ProtobufCMessage base;
+  size_t n_point1;
+  double *point1;
+  size_t n_point2;
+  double *point2;
+  double distance;
+};
+#define POINT_POLYGEN_DISTANCE__INIT \
+ { PROTOBUF_C_MESSAGE_INIT (&point_polygen_distance__descriptor) \
+    , 0,NULL, 0,NULL, 0 }
 
 
 /* Person methods */
@@ -82,6 +121,63 @@ Fib *
 void   fib__free_unpacked
                      (Fib *message,
                       ProtobufCAllocator *allocator);
+/* UserId methods */
+void   user_id__init
+                     (UserId         *message);
+size_t user_id__get_packed_size
+                     (const UserId   *message);
+size_t user_id__pack
+                     (const UserId   *message,
+                      uint8_t             *out);
+size_t user_id__pack_to_buffer
+                     (const UserId   *message,
+                      ProtobufCBuffer     *buffer);
+UserId *
+       user_id__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   user_id__free_unpacked
+                     (UserId *message,
+                      ProtobufCAllocator *allocator);
+/* Spliter methods */
+void   spliter__init
+                     (Spliter         *message);
+size_t spliter__get_packed_size
+                     (const Spliter   *message);
+size_t spliter__pack
+                     (const Spliter   *message,
+                      uint8_t             *out);
+size_t spliter__pack_to_buffer
+                     (const Spliter   *message,
+                      ProtobufCBuffer     *buffer);
+Spliter *
+       spliter__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   spliter__free_unpacked
+                     (Spliter *message,
+                      ProtobufCAllocator *allocator);
+/* PointPolygenDistance methods */
+void   point_polygen_distance__init
+                     (PointPolygenDistance         *message);
+size_t point_polygen_distance__get_packed_size
+                     (const PointPolygenDistance   *message);
+size_t point_polygen_distance__pack
+                     (const PointPolygenDistance   *message,
+                      uint8_t             *out);
+size_t point_polygen_distance__pack_to_buffer
+                     (const PointPolygenDistance   *message,
+                      ProtobufCBuffer     *buffer);
+PointPolygenDistance *
+       point_polygen_distance__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data);
+void   point_polygen_distance__free_unpacked
+                     (PointPolygenDistance *message,
+                      ProtobufCAllocator *allocator);
 /* --- per-message closures --- */
 
 typedef void (*Person_Closure)
@@ -89,6 +185,15 @@ typedef void (*Person_Closure)
                   void *closure_data);
 typedef void (*Fib_Closure)
                  (const Fib *message,
+                  void *closure_data);
+typedef void (*UserId_Closure)
+                 (const UserId *message,
+                  void *closure_data);
+typedef void (*Spliter_Closure)
+                 (const Spliter *message,
+                  void *closure_data);
+typedef void (*PointPolygenDistance_Closure)
+                 (const PointPolygenDistance *message,
                   void *closure_data);
 
 /* --- services --- */
@@ -98,6 +203,9 @@ typedef void (*Fib_Closure)
 
 extern const ProtobufCMessageDescriptor person__descriptor;
 extern const ProtobufCMessageDescriptor fib__descriptor;
+extern const ProtobufCMessageDescriptor user_id__descriptor;
+extern const ProtobufCMessageDescriptor spliter__descriptor;
+extern const ProtobufCMessageDescriptor point_polygen_distance__descriptor;
 
 PROTOBUF_C__END_DECLS
 

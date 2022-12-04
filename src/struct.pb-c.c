@@ -97,6 +97,141 @@ void   fib__free_unpacked
   assert(message->base.descriptor == &fib__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
+void   user_id__init
+                     (UserId         *message)
+{
+  static const UserId init_value = USER_ID__INIT;
+  *message = init_value;
+}
+size_t user_id__get_packed_size
+                     (const UserId *message)
+{
+  assert(message->base.descriptor == &user_id__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t user_id__pack
+                     (const UserId *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &user_id__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t user_id__pack_to_buffer
+                     (const UserId *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &user_id__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+UserId *
+       user_id__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (UserId *)
+     protobuf_c_message_unpack (&user_id__descriptor,
+                                allocator, len, data);
+}
+void   user_id__free_unpacked
+                     (UserId *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &user_id__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   spliter__init
+                     (Spliter         *message)
+{
+  static const Spliter init_value = SPLITER__INIT;
+  *message = init_value;
+}
+size_t spliter__get_packed_size
+                     (const Spliter *message)
+{
+  assert(message->base.descriptor == &spliter__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t spliter__pack
+                     (const Spliter *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &spliter__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t spliter__pack_to_buffer
+                     (const Spliter *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &spliter__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+Spliter *
+       spliter__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (Spliter *)
+     protobuf_c_message_unpack (&spliter__descriptor,
+                                allocator, len, data);
+}
+void   spliter__free_unpacked
+                     (Spliter *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &spliter__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
+void   point_polygen_distance__init
+                     (PointPolygenDistance         *message)
+{
+  static const PointPolygenDistance init_value = POINT_POLYGEN_DISTANCE__INIT;
+  *message = init_value;
+}
+size_t point_polygen_distance__get_packed_size
+                     (const PointPolygenDistance *message)
+{
+  assert(message->base.descriptor == &point_polygen_distance__descriptor);
+  return protobuf_c_message_get_packed_size ((const ProtobufCMessage*)(message));
+}
+size_t point_polygen_distance__pack
+                     (const PointPolygenDistance *message,
+                      uint8_t       *out)
+{
+  assert(message->base.descriptor == &point_polygen_distance__descriptor);
+  return protobuf_c_message_pack ((const ProtobufCMessage*)message, out);
+}
+size_t point_polygen_distance__pack_to_buffer
+                     (const PointPolygenDistance *message,
+                      ProtobufCBuffer *buffer)
+{
+  assert(message->base.descriptor == &point_polygen_distance__descriptor);
+  return protobuf_c_message_pack_to_buffer ((const ProtobufCMessage*)message, buffer);
+}
+PointPolygenDistance *
+       point_polygen_distance__unpack
+                     (ProtobufCAllocator  *allocator,
+                      size_t               len,
+                      const uint8_t       *data)
+{
+  return (PointPolygenDistance *)
+     protobuf_c_message_unpack (&point_polygen_distance__descriptor,
+                                allocator, len, data);
+}
+void   point_polygen_distance__free_unpacked
+                     (PointPolygenDistance *message,
+                      ProtobufCAllocator *allocator)
+{
+  if(!message)
+    return;
+  assert(message->base.descriptor == &point_polygen_distance__descriptor);
+  protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
+}
 static const ProtobufCFieldDescriptor person__field_descriptors[1] =
 {
   {
@@ -171,5 +306,158 @@ const ProtobufCMessageDescriptor fib__descriptor =
   fib__field_indices_by_name,
   1,  fib__number_ranges,
   (ProtobufCMessageInit) fib__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor user_id__field_descriptors[2] =
+{
+  {
+    "user_id",
+    1,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(UserId, user_id),
+    NULL,
+    &protobuf_c_empty_string,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "imei_id",
+    2,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(UserId, imei_id),
+    NULL,
+    &protobuf_c_empty_string,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned user_id__field_indices_by_name[] = {
+  1,   /* field[1] = imei_id */
+  0,   /* field[0] = user_id */
+};
+static const ProtobufCIntRange user_id__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 2 }
+};
+const ProtobufCMessageDescriptor user_id__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "UserId",
+  "UserId",
+  "UserId",
+  "",
+  sizeof(UserId),
+  2,
+  user_id__field_descriptors,
+  user_id__field_indices_by_name,
+  1,  user_id__number_ranges,
+  (ProtobufCMessageInit) user_id__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor spliter__field_descriptors[1] =
+{
+  {
+    "data",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_STRING,
+    offsetof(Spliter, n_data),
+    offsetof(Spliter, data),
+    NULL,
+    &protobuf_c_empty_string,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned spliter__field_indices_by_name[] = {
+  0,   /* field[0] = data */
+};
+static const ProtobufCIntRange spliter__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 1 }
+};
+const ProtobufCMessageDescriptor spliter__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "Spliter",
+  "Spliter",
+  "Spliter",
+  "",
+  sizeof(Spliter),
+  1,
+  spliter__field_descriptors,
+  spliter__field_indices_by_name,
+  1,  spliter__number_ranges,
+  (ProtobufCMessageInit) spliter__init,
+  NULL,NULL,NULL    /* reserved[123] */
+};
+static const ProtobufCFieldDescriptor point_polygen_distance__field_descriptors[3] =
+{
+  {
+    "point1",
+    1,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_DOUBLE,
+    offsetof(PointPolygenDistance, n_point1),
+    offsetof(PointPolygenDistance, point1),
+    NULL,
+    NULL,
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "point2",
+    2,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_DOUBLE,
+    offsetof(PointPolygenDistance, n_point2),
+    offsetof(PointPolygenDistance, point2),
+    NULL,
+    NULL,
+    0 | PROTOBUF_C_FIELD_FLAG_PACKED,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "distance",
+    3,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_DOUBLE,
+    0,   /* quantifier_offset */
+    offsetof(PointPolygenDistance, distance),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+};
+static const unsigned point_polygen_distance__field_indices_by_name[] = {
+  2,   /* field[2] = distance */
+  0,   /* field[0] = point1 */
+  1,   /* field[1] = point2 */
+};
+static const ProtobufCIntRange point_polygen_distance__number_ranges[1 + 1] =
+{
+  { 1, 0 },
+  { 0, 3 }
+};
+const ProtobufCMessageDescriptor point_polygen_distance__descriptor =
+{
+  PROTOBUF_C__MESSAGE_DESCRIPTOR_MAGIC,
+  "PointPolygenDistance",
+  "PointPolygenDistance",
+  "PointPolygenDistance",
+  "",
+  sizeof(PointPolygenDistance),
+  3,
+  point_polygen_distance__field_descriptors,
+  point_polygen_distance__field_indices_by_name,
+  1,  point_polygen_distance__number_ranges,
+  (ProtobufCMessageInit) point_polygen_distance__init,
   NULL,NULL,NULL    /* reserved[123] */
 };

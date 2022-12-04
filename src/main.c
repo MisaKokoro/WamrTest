@@ -12,6 +12,9 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include <string.h>
+#include <unistd.h>
+
 #define BUFF_MAX_LEN 8192
 #define VOS_OK 0
 #define VOS_ERR -1
@@ -20,6 +23,13 @@
 int cnt = 0;
 void *native_buffer;
 uint32_t wasm_buffer = 0;
+
+void *native_buffer_2;
+uint32_t wasm_buffer_2 = 0;
+
+char **split_str;
+int split_max_size = 200;
+
 //运行函数相关参数
 wasm_module_t module = NULL;
 wasm_module_inst_t module_inst = NULL;
@@ -39,15 +49,24 @@ void *pResult = NULL;       //存放结果的首指针
 enum {
     STR_REVERSE,STR_REVERSE_EXEC,
     FIB,FIB_EXEC,
+    BUILD_USER_ID, BUILD_USER_ID_EXEC,
+    SPLITER, SPLITER_EXEC,
+    POINT_POLYGEN_DISTANCE, POINT_POLYGEN_DISTANCE_EXEC,
 };
 const char *TestCase[] = {
     "str_reverse","str_reverse_exec",
     "fib","fib_exec",
+    "build_user_id", "build_user_id_exec",
+    "spliter", "spliter_exec",
+    "point_polygen_distance", "point_polygen_distance_exec",
 };
 
 const char *FuncName[] = {
     "str_reverse","_str_reverse",
     "fib","_fib",
+    "build_user_id", "_build_user_id",
+    "spliter", "_spliter",
+    "point_polygen_distance", "_point_polygen_distance",
 };
 void
 print_usage(void)
@@ -162,9 +181,7 @@ int main(int argc, char *argv_main[])
     }
     static char global_heap_buf[4096 * 1024];
     char *buffer, error_buf[128];
-    char *wasm_path = "/home/yanxiang/Desktop/WamrTest-probuf/build/wasm-app/testapp.aot";
-
-
+    char *wasm_path = "/home/xq/Desktop/work/WamrTest/build/wasm-app/testapp.wasm";
 
     RuntimeInitArgs init_args;
     memset(&init_args, 0, sizeof(RuntimeInitArgs));
@@ -214,6 +231,21 @@ int main(int argc, char *argv_main[])
     //查找导出的函数
     int id = atoi(argv_main[1]);
     cnt = atoi(argv_main[2]);
+    if(id == SPLITER || id == SPLITER_EXEC){
+        split_str = (char **)malloc(cnt * sizeof(char *));
+        char *file_name = "/home/xq/Desktop/work/WamrTest/src/UDF-Benchmark/spliter/string_1000.csv";
+        FILE *f = fopen(file_name, "r");
+        if(f == NULL){
+            perror(file_name);
+            exit(1);
+        }
+        for(int i=0; i<cnt; i++){
+            split_str[i] = malloc(split_max_size);
+            if(fgets(split_str[i], split_max_size, f) == NULL)
+                break;
+        }
+    }
+
     if (!(benchMarkFunc = wasm_runtime_lookup_function(module_inst, FuncName[id],
                                               NULL))) {
         printf("The %s wasm function is not found.\n",FuncName[id]);
@@ -229,6 +261,8 @@ int main(int argc, char *argv_main[])
     wasm_runtime_call_wasm(exec_env,init_ringbuffer_func,3,tmp);
 
     wasm_buffer =  wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&native_buffer);
+    wasm_buffer_2 =  wasm_runtime_module_malloc(module_inst,BUFF_MAX_LEN,(void**)&native_buffer_2);
+
     if (wasm_buffer == 0) {
         printf("unkonwn error \n");
         return 0;
@@ -271,6 +305,24 @@ void test_main(int id,const char *test_name) {
             break;
         case FIB_EXEC:
             test_fib_exec();
+            break;
+        case BUILD_USER_ID:
+            test_build_user_id();
+            break;
+        case BUILD_USER_ID_EXEC:
+            test_build_user_id_exec();
+            break;
+        case SPLITER:
+            test_spliter();
+            break;
+        case SPLITER_EXEC:
+            test_spliter_exec();
+            break;
+        case POINT_POLYGEN_DISTANCE:
+            test_point_polygen_distance();
+            break;
+        case POINT_POLYGEN_DISTANCE_EXEC:
+            test_point_polygen_distance_exec();
             break;
         default:
             printf("no this test!\n");
@@ -353,6 +405,7 @@ void test_fib() {
 }
 
 void test_fib_exec() {
+
     for (int i = 0; i < cnt; i++) {
         uint32_t argv[2] = {42};
         if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 1, argv)) {
@@ -367,3 +420,147 @@ void test_fib_exec() {
     }
 }
 
+void test_build_user_id(){
+    char *user_id = "23172736737";
+    char *imei_id = "94390520635091";
+    for (int i = 0; i < cnt; i++) {
+        // 创建test，并将其序列化
+        UserId user_id_input;
+        user_id__init(&user_id_input);
+        user_id_input.user_id = user_id;
+        user_id_input.imei_id = imei_id;
+
+        int size = user_id__pack(&user_id_input,native_buffer);
+        //传递参数，开始执行
+        uint32_t argv[2] = {wasm_buffer,size};
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function build_user_id failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        //将得到的结果反序列化
+        size = argv[0];
+        UserId *output = user_id__unpack(NULL,size,pResult);
+        printf("user id = %s\n",output->user_id);
+    }
+}
+
+void test_build_user_id_exec(){
+    char user_id[] = "23172736737";
+    char imei_id[] = "94390520635091";
+    for (int i = 0; i < cnt; i++) {
+        memcpy(native_buffer,user_id,sizeof(user_id));
+        memcpy(native_buffer_2, imei_id, sizeof(imei_id));
+
+        uint32_t argv[2] = {wasm_buffer, wasm_buffer_2};
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        } else {
+            printf("call wasm function fib failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void test_spliter(){
+    char *data = "I am asb";
+    for (int i = 0; i < cnt; i++) {
+        // 创建test，并将其序列化
+        Spliter input;
+        spliter__init(&input);
+        input.data = (char **)malloc(sizeof(char *) * 1);
+        input.data[0] = split_str[i];
+        input.data[0] = data;
+        input.n_data = 1;
+
+        int size = user_id__pack(&input, native_buffer);
+        //传递参数，开始执行
+        size_t array_len = 3;
+        uint32_t argv[3] = {wasm_buffer,size, array_len};
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 3, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function split failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        // 将得到的结果反序列化
+
+        size = argv[0];
+        Spliter *output = spliter__unpack(NULL,size,pResult);
+        for(int j=0; j < output->n_data; j++)
+            printf("spliter str = %s\n",output->data[j]);
+    }
+}
+
+void test_spliter_exec(){
+    char *data = "I am a test";
+    size_t array_len = 3;
+    for (int i = 0; i < cnt; i++) {
+        memcpy(native_buffer,data,sizeof(data));
+
+        uint32_t argv[2] = {wasm_buffer, array_len};
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function split failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+void test_point_polygen_distance(){
+    double point1[3] = {55.019369276597246,56.04653136999801,61.32173119067093};
+    double point2[3] = {2.5611362913548987,36.674703766827236,-18.76548358360523};
+    for (int i = 0; i < cnt; i++) {
+        // 创建test，并将其序列化
+        PointPolygenDistance input;
+        point_polygen_distance__init(&input);
+        input.point1 = point1;
+        input.point2 = point2;
+        input.n_point1 = 3;
+        input.n_point2 = 3;
+
+        int size = point_polygen_distance__pack(&input, native_buffer);
+        //传递参数，开始执行
+        uint32_t argv[2] = {wasm_buffer,size};
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 2, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function split failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+        // 将得到的结果反序列化
+
+        size = argv[0];
+        PointPolygenDistance *output = point_polygen_distance__unpack(NULL,size,pResult);
+        printf("distance: %lf\n", output->distance);
+    }
+}
+
+void test_point_polygen_distance_exec(){
+    double point1[3] = {55.019369276597246,56.04653136999801,61.32173119067093};
+    double point2[3] = {2.5611362913548987,36.674703766827236,-18.76548358360523};
+    for (int i = 0; i < cnt; i++) {
+        memcpy(native_buffer,point1,sizeof(point1));
+        memcpy(native_buffer_2,point2,sizeof(point1));
+        uint32_t argv[4] = {wasm_buffer, wasm_buffer_2, 3, 3};
+        if (wasm_runtime_call_wasm(exec_env, benchMarkFunc, 4, argv)) {
+            // printf("run str_reverse ok \n");
+        }
+        else {
+            printf("call wasm function split failed. error: %s\n",
+                wasm_runtime_get_exception(module_inst));
+            exit(EXIT_FAILURE);
+        }
+    }
+}
